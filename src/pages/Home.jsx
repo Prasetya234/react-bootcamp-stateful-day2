@@ -76,7 +76,7 @@ export default class Home extends Component {
                     <div className="row featurette" style={{ margin: '40px 0' }}>
                         <div className="col-md-7">
                             <h2 className="featurette-heading fw-normal lh-1">Badeng Presto</h2>
-                            <p className="lead">Makanan khas semarang, yang berasal dari zaman kerajaan majapahit.</p>
+                            <p className="lead">Makanan khas semarang, yang berasal dari zaman kerajaan hingga saat ini.</p>
                         </div>
                         <div className="col-md-5">
                             <img src={badengPresto} alt="badeng" />
