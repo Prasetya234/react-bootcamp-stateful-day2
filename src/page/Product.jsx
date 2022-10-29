@@ -7,19 +7,31 @@ import {
   Form,
   Modal,
 } from "react-bootstrap";
+import { formatingRupiah, calculateDate } from "../utils/index"
 import Loading from "../components/Loading";
 import noImage from "../assets/no-image.png";
+import SweetAlert2 from 'react-sweetalert2';
+
 import axios from "axios";
 
 export default class Product extends Component {
   state = null;
+  idPrduct = null
   constructor(props) {
     super(props);
     this.state = {
       name: "",
       isLoading: false,
       hasil: "",
+      swal: {
+        show: false,
+        title: 'Are you sure?',
+        text: 'Product akan di hapus secara permanen',
+        showCancelButton: true,
+        icon: 'info',
+      },
       isModal: false,
+      isEdit: false,
       input: {
         name: "",
         price: "",
@@ -67,6 +79,44 @@ export default class Product extends Component {
       this.setState((state) => (state.input.image = fileReader.result));
     };
   }
+  onShowModalAdd() {
+    this.setState({
+      ...this.state,
+      isModal: true,
+      isEdit: false,
+      input: {
+        name: "",
+        price: "",
+        image: "",
+        description: "",
+      },
+    });
+  }
+  onShowModalEdit(data) {
+    this.setState({
+      ...this.state,
+      isModal: true,
+      isEdit: true,
+      input: {
+        name: data.name,
+        price: data.price,
+        image: data.image,
+        description: data.description,
+      }
+    })
+  }
+  async onDeleteProduct(id) {
+    this.setState((state) => (state.swal.show = true));
+    this.idPrduct = id;
+  }
+  async onDeleteProductConfirm() {
+    this.setState((state) => (state.isLoading = true));
+    this.setState((state) => (state.swal.show = false));
+    await axios.delete(
+      "https://api-resto-bootcamp.herokuapp.com/api/product/" + this.idPrduct
+    );
+    this.fetchListProduct();
+  }
   async fetchListProduct() {
     this.setState((state) => (state.loading = true));
     const res = await axios.get(
@@ -74,9 +124,7 @@ export default class Product extends Component {
     );
     this.setState({ ...this.state, loading: false, listPorduct: res.data });
 
-    // axios.post("https://api-resto-bootcamp.herokuapp.com/api/product", {
-    //   ...this.state.input
-    // })
+
   }
 
   onSearch() {
@@ -99,9 +147,14 @@ export default class Product extends Component {
           <Loading />
         ) : (
           <>
+            <SweetAlert2 {...this.state.swal} onConfirm={() => this.onDeleteProductConfirm()}
+              didClose={() => {
+                this.setState((state) => (state.swal.show = false));
+              }}
+            />
             <Modal show={this.state.isModal} onHide={() => this.handleClose()}>
               <Modal.Header closeButton>
-                <Modal.Title>Tambah Product</Modal.Title>
+                <Modal.Title>{this.state.isEdit ? 'Edit' : 'Tambah'} Product</Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 <Form>
@@ -113,6 +166,7 @@ export default class Product extends Component {
                     <Form.Control
                       type="text"
                       autoFocus
+                      value={this.state.input.name}
                       onChange={(e) =>
                         this.setState(
                           (state) => (state.input.name = e.target.value)
@@ -128,6 +182,7 @@ export default class Product extends Component {
                     <Form.Control
                       type="text"
                       autoFocus
+                      value={this.state.input.price}
                       onChange={(e) =>
                         this.setState(
                           (state) => (state.input.price = e.target.value)
@@ -150,6 +205,7 @@ export default class Product extends Component {
                     <Form.Control
                       as="textarea"
                       rows={3}
+                      value={this.state.input.description}
                       onChange={(e) =>
                         this.setState(
                           (state) => (state.input.description = e.target.value)
@@ -206,19 +262,23 @@ export default class Product extends Component {
                 <div>
                   <div className="row" id="root">
                     {this.state.listPorduct.map((item, idx) => (
-                      <div className="col-md-4" key={idx}>
+                      <div className="col-md-4 my-4" key={idx}>
                         <div className="card shadow-sm">
                           <img
                             src={item.image ? item.image : noImage}
-                            alt="Sorry! Image not available at this time"
+                            alt="Gambar"
                             className="product-img"
                           />
                           <div className="card-body">
                             <h5 className="card-title">{item.name}</h5>
                             <p className="card-text">{item.description}</p>
                             <div className="d-flex justify-content-between align-items-center">
-                              <small className="text-muted">{item.price}</small>
-                              <small className="text-muted">{item.time}</small>
+                              <small className="text-muted">{formatingRupiah(item.price)}</small>
+                              <small className="text-muted">{calculateDate(item.createdAt)}</small>
+                            </div>
+                            <div className="btn-group btn-group-sm mt-4" style={{ float: 'right' }} role="group" aria-label="Basic example">
+                              <button type="button" className="btn btn-primary" onClick={() => this.onShowModalEdit(item)}>Ubah</button>
+                              <button type="button" className="btn btn-danger" onClick={() => this.onDeleteProduct(item.id)}>Hapus</button>
                             </div>
                           </div>
                         </div>
@@ -229,7 +289,7 @@ export default class Product extends Component {
                     <Button
                       variant="outline-primary"
                       onClick={() =>
-                        this.setState((state) => (state.isModal = true))
+                        this.onShowModalAdd()
                       }
                     >
                       <svg
