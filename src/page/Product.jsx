@@ -1,4 +1,4 @@
-import React, { Component } from "react";
+import React, {Component} from "react";
 import {
   Container,
   InputGroup,
@@ -7,16 +7,16 @@ import {
   Form,
   Modal,
 } from "react-bootstrap";
-import { formatingRupiah, calculateDate } from "../utils/index"
+import {formatingRupiah, calculateDate} from "../utils/index";
 import Loading from "../components/Loading";
 import noImage from "../assets/no-image.png";
-import SweetAlert2 from 'react-sweetalert2';
+import SweetAlert2 from "react-sweetalert2";
 
 import axios from "axios";
 
 export default class Product extends Component {
   state = null;
-  idPrduct = null
+  idPrduct = null;
   constructor(props) {
     super(props);
     this.state = {
@@ -25,10 +25,10 @@ export default class Product extends Component {
       hasil: "",
       swal: {
         show: false,
-        title: 'Are you sure?',
-        text: 'Product akan di hapus secara permanen',
+        title: "Are you sure?",
+        text: "Product akan di hapus secara permanen",
         showCancelButton: true,
-        icon: 'info',
+        icon: "info",
       },
       isModal: false,
       isEdit: false,
@@ -93,6 +93,7 @@ export default class Product extends Component {
     });
   }
   onShowModalEdit(data) {
+    this.idPrduct = data.id;
     this.setState({
       ...this.state,
       isModal: true,
@@ -102,8 +103,8 @@ export default class Product extends Component {
         price: data.price,
         image: data.image,
         description: data.description,
-      }
-    })
+      },
+    });
   }
   async onDeleteProduct(id) {
     this.setState((state) => (state.swal.show = true));
@@ -122,9 +123,29 @@ export default class Product extends Component {
     const res = await axios.get(
       "https://api-resto-bootcamp.herokuapp.com/api/product"
     );
-    this.setState({ ...this.state, loading: false, listPorduct: res.data });
-
-
+    this.setState({...this.state, loading: false, listPorduct: res.data});
+  }
+  async onEdit() {
+    this.setState((state) => (state.loading = true));
+    await axios.put(
+      "https://api-resto-bootcamp.herokuapp.com/api/product/" + this.idPrduct,
+      {
+        ...this.state.input,
+      }
+    );
+    await this.setState({
+      ...this.state,
+      isModal: false,
+      loading: false,
+      isEdit: false,
+      input: {
+        name: "",
+        price: "",
+        image: "",
+        description: "",
+      },
+    });
+    await this.fetchListProduct();
   }
 
   onSearch() {
@@ -147,14 +168,18 @@ export default class Product extends Component {
           <Loading />
         ) : (
           <>
-            <SweetAlert2 {...this.state.swal} onConfirm={() => this.onDeleteProductConfirm()}
+            <SweetAlert2
+              {...this.state.swal}
+              onConfirm={() => this.onDeleteProductConfirm()}
               didClose={() => {
                 this.setState((state) => (state.swal.show = false));
               }}
             />
             <Modal show={this.state.isModal} onHide={() => this.handleClose()}>
               <Modal.Header closeButton>
-                <Modal.Title>{this.state.isEdit ? 'Edit' : 'Tambah'} Product</Modal.Title>
+                <Modal.Title>
+                  {this.state.isEdit ? "Edit" : "Tambah"} Product
+                </Modal.Title>
               </Modal.Header>
               <Modal.Body>
                 <Form>
@@ -231,7 +256,12 @@ export default class Product extends Component {
                     Loading...
                   </Button>
                 ) : (
-                  <Button variant="primary" onClick={() => this.onAdd()}>
+                  <Button
+                    variant="primary"
+                    onClick={() =>
+                      this.state.isEdit ? this.onEdit() : this.onAdd()
+                    }
+                  >
                     Save Changes
                   </Button>
                 )}
@@ -273,12 +303,33 @@ export default class Product extends Component {
                             <h5 className="card-title">{item.name}</h5>
                             <p className="card-text">{item.description}</p>
                             <div className="d-flex justify-content-between align-items-center">
-                              <small className="text-muted">{formatingRupiah(item.price)}</small>
-                              <small className="text-muted">{calculateDate(item.createdAt)}</small>
+                              <small className="text-muted">
+                                {formatingRupiah(item.price)}
+                              </small>
+                              <small className="text-muted">
+                                {calculateDate(item.createdAt)}
+                              </small>
                             </div>
-                            <div className="btn-group btn-group-sm mt-4" style={{ float: 'right' }} role="group" aria-label="Basic example">
-                              <button type="button" className="btn btn-primary" onClick={() => this.onShowModalEdit(item)}>Ubah</button>
-                              <button type="button" className="btn btn-danger" onClick={() => this.onDeleteProduct(item.id)}>Hapus</button>
+                            <div
+                              className="btn-group btn-group-sm mt-4"
+                              style={{float: "right"}}
+                              role="group"
+                              aria-label="Basic example"
+                            >
+                              <button
+                                type="button"
+                                className="btn btn-primary"
+                                onClick={() => this.onShowModalEdit(item)}
+                              >
+                                Ubah
+                              </button>
+                              <button
+                                type="button"
+                                className="btn btn-danger"
+                                onClick={() => this.onDeleteProduct(item.id)}
+                              >
+                                Hapus
+                              </button>
                             </div>
                           </div>
                         </div>
@@ -288,9 +339,7 @@ export default class Product extends Component {
                   <div className="footer-produc pointer">
                     <Button
                       variant="outline-primary"
-                      onClick={() =>
-                        this.onShowModalAdd()
-                      }
+                      onClick={() => this.onShowModalAdd()}
                     >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -303,7 +352,7 @@ export default class Product extends Component {
                         <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z" />
                         <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
                       </svg>
-                      <span style={{ marginLeft: "10px" }}>Add Product</span>
+                      <span style={{marginLeft: "10px"}}>Add Product</span>
                     </Button>
                   </div>
                 </div>
